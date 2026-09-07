@@ -3,5 +3,75 @@ package com.example.aiandroidagent.automation
 import android.content.Context
 import com.example.aiandroidagent.accessibility.AIAccessibilityService
 import com.example.aiandroidagent.agent.*
+import kotlinx.coroutines.delay
 
-class DeviceActionExecutor(context:Context){ private val launcher=AppLauncher(context); suspend fun execute(a:AgentAction):ActionResult=try{when(a){is AgentAction.OpenApp->launcher.launch(a.packageName).fold({ActionResult(true,"Opened ${a.packageName}")},{ActionResult(false,it.message?:"Launch failed","APP_LAUNCH")});is AgentAction.ClickText->ActionResult(AIAccessibilityService.clickText(a.text),"Clicked text ${a.text}");is AgentAction.ClickDescription->ActionResult(AIAccessibilityService.clickDescription(a.description),"Clicked description ${a.description}");is AgentAction.Swipe->ActionResult(AIAccessibilityService.swipe(a.x1,a.y1,a.x2,a.y2,a.durationMs),"Swiped");is AgentAction.Back->ActionResult(AIAccessibilityService.back(),"Back");is AgentAction.Home->ActionResult(AIAccessibilityService.home(),"Home");is AgentAction.Recents->ActionResult(AIAccessibilityService.recents(),"Recents");is AgentAction.Wait->{kotlinx.coroutines.delay(a.milliseconds);ActionResult(true,"Waited")};is AgentAction.Stop->ActionResult(true,"Stopped");else->ActionResult(true,"Observation requested")}}catch(e:Exception){ActionResult(false,e.message?:"Action failed","EXECUTION")}}
+class DeviceActionExecutor(context: Context) {
+    private val launcher = AppLauncher(context)
+
+    suspend fun execute(action: AgentAction): ActionResult = try {
+        when (action) {
+            is AgentAction.OpenApp -> launcher.launch(action.packageName).fold(
+                { ActionResult(true, "Opened ${action.packageName}") },
+                { ActionResult(false, it.message ?: "Launch failed", "APP_LAUNCH") }
+            )
+            is AgentAction.ClickText -> result(
+                AIAccessibilityService.clickText(action.text),
+                "Clicked text ${action.text}",
+                "CLICK_TEXT"
+            )
+            is AgentAction.ClickDescription -> result(
+                AIAccessibilityService.clickDescription(action.description),
+                "Clicked description ${action.description}",
+                "CLICK_DESCRIPTION"
+            )
+            is AgentAction.ClickCoordinate -> result(
+                AIAccessibilityService.clickCoordinate(action.x, action.y),
+                "Clicked (${action.x}, ${action.y})",
+                "CLICK_COORDINATE"
+            )
+            is AgentAction.Swipe -> result(
+                AIAccessibilityService.swipe(action.x1, action.y1, action.x2, action.y2, action.durationMs),
+                "Swiped",
+                "SWIPE"
+            )
+            is AgentAction.Scroll -> result(
+                AIAccessibilityService.scroll(action.forward),
+                if (action.forward) "Scrolled forward" else "Scrolled backward",
+                "SCROLL"
+            )
+            is AgentAction.TypeText -> result(
+                AIAccessibilityService.typeText(action.text),
+                "Typed text",
+                "TYPE_TEXT"
+            )
+            is AgentAction.Back -> result(AIAccessibilityService.back(), "Back", "BACK")
+            is AgentAction.Home -> result(AIAccessibilityService.home(), "Home", "HOME")
+            is AgentAction.Recents -> result(AIAccessibilityService.recents(), "Recents", "RECENTS")
+            is AgentAction.Wait -> {
+                delay(action.milliseconds.coerceIn(0L, 30_000L))
+                ActionResult(true, "Waited")
+            }
+            is AgentAction.Observe -> ActionResult(
+                AIAccessibilityService.connected,
+                "Accessibility snapshot available: ${AIAccessibilityService.currentTexts().size} items",
+                if (AIAccessibilityService.connected) null else "ACCESSIBILITY_NOT_CONNECTED"
+            )
+            is AgentAction.ScreenAnalyze -> ActionResult(
+                false,
+                "Screen analysis is not configured yet",
+                "VISION_NOT_CONFIGURED"
+            )
+            is AgentAction.AskUserConfirmation -> ActionResult(
+                false,
+                action.prompt,
+                "USER_CONFIRMATION_REQUIRED"
+            )
+            is AgentAction.Stop -> ActionResult(true, "Stopped")
+        }
+    } catch (e: Exception) {
+        ActionResult(false, e.message ?: "Action failed", "EXECUTION")
+    }
+
+    private fun result(success: Boolean, message: String, errorCode: String): ActionResult =
+        ActionResult(success, message, if (success) null else errorCode)
+}
