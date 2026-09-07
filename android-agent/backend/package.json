@@ -1,0 +1,1 @@
+{"name":"ai-android-agent-backend","private":true,"type":"module","scripts":{"dev":"tsx server/index.ts"},"dependencies":{"@google/generative-ai":"latest","express":"latest"},"devDependencies":{"tsx":"latest","typescript":"latest"}}

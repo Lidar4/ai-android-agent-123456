@@ -1,0 +1,14 @@
+# Copy to android-release.yml only after configuring GitHub Secrets.
+# Required secrets: ANDROID_KEYSTORE_BASE64, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD, ANDROID_STORE_PASSWORD.
+name: Signed release example
+on: workflow_dispatch
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: android-actions/setup-android@v3
+      - run: echo 'Configure a temporary keystore from GitHub Secrets here; never commit it.'
+      - run: ./gradlew :app:assembleRelease
