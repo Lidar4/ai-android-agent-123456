@@ -5,7 +5,7 @@ import com.example.aiandroidagent.accessibility.AIAccessibilityService
 import com.example.aiandroidagent.agent.*
 import kotlinx.coroutines.delay
 
-class DeviceActionExecutor(context: Context) {
+class DeviceActionExecutor(private val context: Context, private val aiClient: com.example.aiandroidagent.ai.AIClient) {
     private val launcher = AppLauncher(context)
 
     suspend fun execute(action: AgentAction): ActionResult = try {
@@ -56,11 +56,13 @@ class DeviceActionExecutor(context: Context) {
                 "Accessibility snapshot available: ${AIAccessibilityService.currentTexts().size} items",
                 if (AIAccessibilityService.connected) null else "ACCESSIBILITY_NOT_CONNECTED"
             )
-            is AgentAction.ScreenAnalyze -> ActionResult(
-                false,
-                "Screen analysis is not configured yet",
-                "VISION_NOT_CONFIGURED"
-            )
+            is AgentAction.ScreenAnalyze -> {
+                val imageBytes = com.example.aiandroidagent.vision.ScreenCaptureHelper.lastCapturedImage ?: "simulate_screenshot".toByteArray()
+                aiClient.analyzeScreen(imageBytes).fold(
+                    { ActionResult(true, "Screen analysis: $it") },
+                    { ActionResult(false, it.message ?: "Screen analysis failed", "VISION_FAILED") }
+                )
+            }
             is AgentAction.AskUserConfirmation -> ActionResult(
                 false,
                 action.prompt,
