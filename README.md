@@ -1,33 +1,42 @@
-# ai-android-agent-123456
+# AI Android Agent Workspace
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+This repository contains the complete AI Android Agent project, featuring a dual-architecture setup:
 
-## Built with v0
+1. **Interactive Web Workspace & Emulator (Web Preview)**: A rich React/Next.js and Material 3 interface that simulates the AI Android Agent companion application, permissions gates, and automated device actions (clicks, keyboard input, swiping, planning) inside a high-fidelity visual Android emulator frame in real time.
+2. **Native Android Client App (`/android-agent`)**: A native Kotlin application built with Jetpack Compose, Room database, and Accessibility services ready to be compiled into an Android APK or opened in Android Studio.
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+---
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_hYofADBJRWoBAAgkBs5KZGfBebnB)
+## 🛠️ Project Structure
 
-## Getting Started
+- `/app/page.tsx`: The main interactive dashboard of the **AI Android Agent Workspace** simulator.
+- `/android-agent`: The complete native Kotlin codebase, consisting of:
+  - `app/src/main/java/com/example/aiandroidagent/MainActivity.kt`: The main entry screen.
+  - `accessibility/AIAccessibilityService.kt`: Interfacing with system accessibility APIs.
+  - `agent/AgentOrchestrator.kt`: Implementing the agent planner state machine.
+  - `security/ActionPolicy.kt`: Defining safety validations (Safe, Confirmation Required, Blocked).
+  - `data/AppDatabase.kt`: Room database persistence.
 
-First, run the development server:
+---
+
+## 🚀 Getting Started
+
+### 1. Web Simulator Workspace (Local Development)
+
+First, install dependencies and start the development server:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to access the interactive web emulator dashboard where you can type commands like `"Open YouTube and play lo-fi"` and watch the agent orchestrator dynamically plan and automate simulated clicks and gestures on the screen.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Native Android App (`/android-agent`)
 
-## Learn More
+Open the `/android-agent` directory in **Android Studio** to run, debug, or build the actual native Android APK:
 
-To learn more, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+- Supported Android OS: SDK 26+ (Android 8.0+)
+- Targeted SDK: SDK 35 (Android 15)
+- UI Library: Jetpack Compose
+- Database: Room with KSP Compiler

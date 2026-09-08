@@ -1,0 +1,6 @@
+{
+  "name": "AI Android Agent",
+  "description": "An Android AI agent workspace with task automation, screen state parsing, and voice control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

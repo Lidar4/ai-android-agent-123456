@@ -20,6 +20,12 @@ class AIAccessibilityService : AccessibilityService() {
 
         fun clickDescription(description: String): Boolean = instance?.findDescription(description)?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
 
+        fun back(): Boolean = instance?.performGlobalAction(GLOBAL_ACTION_BACK) == true
+
+        fun home(): Boolean = instance?.performGlobalAction(GLOBAL_ACTION_HOME) == true
+
+        fun recents(): Boolean = instance?.performGlobalAction(GLOBAL_ACTION_RECENTS) == true
+
         fun clickCoordinate(x: Float, y: Float): Boolean {
             val service = instance ?: return false
             val path = Path().apply { moveTo(x, y) }
