@@ -24,35 +24,35 @@ jobs:
           p = Path('app/page.tsx')
           s = p.read_text()
 
-          helper_old = """  // Helper to change screen and record previous
-            const transitionToScreen = (newScreen: typeof screenState) => {
-              setPreviousScreenState(screenState)
-              setScreenState(newScreen)
-            }
-          """
-          helper_new = """  // Helper to change screen and record previous
-            const transitionToScreen = (newScreen: typeof screenState) => {
-              setPreviousScreenState(screenState)
-              setScreenState(newScreen)
-            }
+          anchor = """  // Helper to change screen and record previous
+  const transitionToScreen = (newScreen: typeof screenState) => {
+    setPreviousScreenState(screenState)
+    setScreenState(newScreen)
+  }
+"""
+          replacement = """  // Helper to change screen and record previous
+  const transitionToScreen = (newScreen: typeof screenState) => {
+    setPreviousScreenState(screenState)
+    setScreenState(newScreen)
+  }
 
-            // Always provide a deterministic way back from simulator app screens.
-            const goBackSimulator = () => {
-              if (screenState === 'companion' || screenState === 'home') {
-                setScreenState('companion')
-                setPreviousScreenState('home')
-                return
-              }
-              const target = previousScreenState === screenState ? 'companion' : previousScreenState
-              setScreenState(target)
-              setPreviousScreenState('home')
-            }
-          """
+  // Always provide a deterministic way back from simulator app screens.
+  const goBackSimulator = () => {
+    if (screenState === 'companion' || screenState === 'home') {
+      setScreenState('companion')
+      setPreviousScreenState('home')
+      return
+    }
+    const target = previousScreenState === screenState ? 'companion' : previousScreenState
+    setScreenState(target)
+    setPreviousScreenState('home')
+  }
+"""
 
           if 'const goBackSimulator = () =>' not in s:
-              if helper_old not in s:
+              if anchor not in s:
                   raise SystemExit('navigation helper anchor not found')
-              s = s.replace(helper_old, helper_new, 1)
+              s = s.replace(anchor, replacement, 1)
 
           marker = "                  {/* SCREEN 6: Settings Screen */}"
           button = """                  {/* Persistent simulator navigation control */}
