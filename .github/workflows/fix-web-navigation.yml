@@ -1,0 +1,90 @@
+name: Repair Web Simulator Navigation
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-web-navigation.yml'
+      - 'app/page.tsx'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch simulator back navigation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('app/page.tsx')
+          s = p.read_text()
+
+          helper_old = """  // Helper to change screen and record previous
+            const transitionToScreen = (newScreen: typeof screenState) => {
+              setPreviousScreenState(screenState)
+              setScreenState(newScreen)
+            }
+          """
+          helper_new = """  // Helper to change screen and record previous
+            const transitionToScreen = (newScreen: typeof screenState) => {
+              setPreviousScreenState(screenState)
+              setScreenState(newScreen)
+            }
+
+            // Always provide a deterministic way back from simulator app screens.
+            const goBackSimulator = () => {
+              if (screenState === 'companion' || screenState === 'home') {
+                setScreenState('companion')
+                setPreviousScreenState('home')
+                return
+              }
+              const target = previousScreenState === screenState ? 'companion' : previousScreenState
+              setScreenState(target)
+              setPreviousScreenState('home')
+            }
+          """
+
+          if 'const goBackSimulator = () =>' not in s:
+              if helper_old not in s:
+                  raise SystemExit('navigation helper anchor not found')
+              s = s.replace(helper_old, helper_new, 1)
+
+          marker = "                  {/* SCREEN 6: Settings Screen */}"
+          button = """                  {/* Persistent simulator navigation control */}
+                  {screenState !== 'companion' && (
+                    <button
+                      type=\"button\"
+                      onClick={goBackSimulator}
+                      aria-label=\"Back to previous simulator screen\"
+                      className=\"absolute left-3 top-3 z-50 flex items-center gap-1 rounded-lg bg-black/70 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur hover:bg-black/85 transition\"
+                    >
+                      <ArrowLeft className=\"size-4\" />
+                      Back
+                    </button>
+                  )}
+
+"""
+          if 'Persistent simulator navigation control' not in s:
+              if marker not in s:
+                  raise SystemExit('simulator render anchor not found')
+              s = s.replace(marker, button + marker, 1)
+
+          p.write_text(s)
+          PY
+
+      - name: Commit repair
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/page.tsx
+          if git diff --cached --quiet; then
+            echo 'No navigation changes needed.'
+            exit 0
+          fi
+          git commit -m 'fix: add reliable simulator back navigation'
+          git push
