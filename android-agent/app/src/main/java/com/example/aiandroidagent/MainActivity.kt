@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
                                 val result = provider.createPlan(input, DeviceState())
                                 result.onSuccess { plan ->
                                     goal = plan.goal
-                                    actions = plan.actions.map { action -> actionLabel(action) }
+                                    actions = plan.actions.map(::actionLabel)
                                     status = "Plan ready (${plan.actions.size} action${if (plan.actions.size == 1) "" else "s"})"
 
                                     val first = plan.actions.firstOrNull()
@@ -124,11 +124,11 @@ class MainActivity : ComponentActivity() {
 
     private fun actionLabel(action: AgentAction): String = when (action) {
         is AgentAction.OpenApp -> "Open app: ${action.packageName}"
-        is AgentAction.Wait -> "Wait ${action.millis} ms"
+        is AgentAction.Wait -> "Wait ${action.milliseconds} ms"
         is AgentAction.Observe -> "Observe current screen"
         is AgentAction.ClickText -> "Click text: ${action.text}"
         is AgentAction.ClickDescription -> "Click description: ${action.description}"
-        is AgentAction.AskUserConfirmation -> "Ask confirmation: ${action.message}"
+        is AgentAction.AskUserConfirmation -> "Ask confirmation: ${action.prompt}"
         else -> action::class.simpleName ?: "Action"
     }
 }
