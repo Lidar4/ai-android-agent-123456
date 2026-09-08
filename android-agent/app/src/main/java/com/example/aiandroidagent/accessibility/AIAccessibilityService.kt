@@ -18,8 +18,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.asSharedFlow
-import kotlinx.coroutines.collect
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AIAccessibilityService : AccessibilityService() {
@@ -33,7 +34,7 @@ class AIAccessibilityService : AccessibilityService() {
         private val _events = MutableSharedFlow<String>(extraBufferCapacity = 64)
         private val _commands = MutableSharedFlow<String>(extraBufferCapacity = 16)
 
-        val snapshot = _snapshot.asSharedFlow()
+        val snapshot = _snapshot.asStateFlow()
         val events = _events.asSharedFlow()
         val connected: Boolean get() = instance != null
 
@@ -97,7 +98,8 @@ class AIAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
-        orchestrator = AgentOrchestrator(GeminiProvider(), ActionPolicy()) { action -> DeviceActionExecutor(this).execute(action) }
+        val gemini = GeminiProvider()
+        orchestrator = AgentOrchestrator(gemini, ActionPolicy()) { action -> DeviceActionExecutor(this, gemini).execute(action) }
         serviceScope.launch {
             _commands.collect { command ->
                 if (!getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(KEY_ENABLED, false)) {
