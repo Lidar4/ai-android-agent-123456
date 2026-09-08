@@ -12,6 +12,9 @@ on:
       - ".github/workflows/android-build.yml"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,8 +39,6 @@ jobs:
       - name: Install Android SDK 35
         run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      # The repository currently has no committed gradlew/gradle-wrapper.jar.
-      # Provision Gradle on the runner and generate the wrapper before building.
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v6
         with:
@@ -62,10 +63,25 @@ jobs:
           test -s app/build/outputs/apk/debug/app-debug.apk
           ls -lh app/build/outputs/apk/debug/app-debug.apk
 
-      - name: Upload debug APK
+      - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: ai-android-agent-debug-apk
           path: android-agent/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish APK release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-build-${{ github.run_number }}
+          name: AI Android Agent APK Build ${{ github.run_number }}
+          body: |
+            Automated debug APK build from commit ${{ github.sha }}.
+            This APK is intended for testing and installation on compatible Android devices.
+          files: android-agent/app/build/outputs/apk/debug/app-debug.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
